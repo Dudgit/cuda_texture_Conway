@@ -9,17 +9,15 @@
 texture<float, 1, cudaReadModeElementType> texInput;
 
 
-__global__ void texture_c(float* output)
+__global__ void texture_c(float* output, cudaTextureObject_t texobj)
 {
 	/*
 	Inputnak próbálkoztam int1 típussal is valamint int array-el, ugyan az a végeredmény
 	*/
-	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
-	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
-	//output[y * h + x] = tex2D<float>(input, x, y);
-	output[y * h + x] = tex1Dfetch<float>(texInput, y * h + x);
-	
-	
+	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x; // vízszintes sorok
+	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y; // függõleges sorok
+
+	output[y * h + x] = tex2D<float>(texobj, x, y-1);
 	
 }
 
@@ -30,7 +28,7 @@ int main()
 	initializer(bools);
 
 	std::vector<float> int_vector(w * h);
-	std::vector<float> output(h * w);
+	//std::vector<float> output(h * w);
 	initializer(int_vector);
 
 	float* hInput = (float*)malloc(sizeof(float) *	h*w);
@@ -45,34 +43,58 @@ int main()
 
 	size_t offset = 0;
 
-	texInput.addressMode[0] = cudaAddressModeBorder;
-	texInput.addressMode[1] = cudaAddressModeBorder;
-	texInput.filterMode = cudaFilterModePoint;
-	texInput.normalized = false;
 
 
-	cudaError_t err = (cudaMalloc((void**)&dInput, sizeof(float) *h*w));
-	if (err != cudaSuccess) { std::cout << "Error allocating Cuda memory: " << cudaGetErrorString(err) << '\n'; return -1; }
+	cudaChannelFormatDesc channelDesc =
+		cudaCreateChannelDesc(32, 0, 0, 0,
+			cudaChannelFormatKindFloat);
+	cudaArray* cuArray;
+	cudaMallocArray(&cuArray, &channelDesc, w, h);
 
-	err = (cudaMalloc((void**)&dOutput, sizeof(float) * h * w));
-	if (err != cudaSuccess) { std::cout << "Error allocating Cuda memory: " << cudaGetErrorString(err) << '\n'; return -1; }
+	auto err = cudaMemcpyToArray(cuArray, 0, 0, hInput, w * h * sizeof(float), cudaMemcpyHostToDevice);
+	if (err != cudaSuccess) { std::cout << "Error copying memory to device: " << cudaGetErrorString(err) << "\n"; return -1; }
 
-	cudaMemcpy(dInput, hInput, sizeof(float) * h*w, cudaMemcpyHostToDevice);
+	struct cudaResourceDesc resDesc;
+	memset(&resDesc, 0, sizeof(resDesc));
+	resDesc.resType = cudaResourceTypeArray;
+	resDesc.res.array.array = cuArray;
 
-	cudaBindTexture(&offset, texInput, dInput, sizeof(float) * h*w);
+
+	struct cudaTextureDesc texDesc;
+	memset(&texDesc, 0, sizeof(texDesc));
+	texDesc.addressMode[0] = cudaAddressModeWrap;
+	texDesc.addressMode[1] = cudaAddressModeWrap;
+	texDesc.filterMode = cudaFilterModePoint;
+	texDesc.readMode = cudaReadModeElementType;
+	texDesc.normalizedCoords = 0;
+
+	cudaTextureObject_t texObj = 0;
+	cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL);
 
 
+	float* output;
+	cudaMalloc(&output, w * h * sizeof(float));
 
-	dim3 dimGrid(w / block_size, h / block_size);
-	dim3 dimBlock(block_size, block_size);
+	dim3 dimBlock(w / block_size, h / block_size);
+	dim3 dimGrid(block_size, block_size);
+	texture_c <<< dimGrid,dimBlock >> > (output, texObj);
 
-	texture_c <<< dimGrid, dimBlock >>> (dOutput);
-
+	
 	//std::cout << "Succes rages on" << std::endl;
-	err = cudaMemcpy(hOutput, dOutput, w * h * sizeof(float), cudaMemcpyDeviceToHost);
+	err = cudaMemcpy(hOutput, output, w * h * sizeof(float), cudaMemcpyDeviceToHost);
 	if (err != cudaSuccess) { std::cout << "Error copying memory to host: " << cudaGetErrorString(err) << "\n"; return -1; }
+	
+	for (int x = 0; x < h; ++x)
+	{
+		for (int y = 0; y < w; ++y)
+		{
+			std::cout << int_vector[x * h + y]<<' ';
+		}
+		std::cout << std::endl;
+	}
+	
 	for (int i = 0; i < h * w; ++i)
 	{
-		std::cout << hOutput[i] << " " << int_vector[i] << std::endl;
+		std::cout << hOutput[i] <<  std::endl;
 	}
 }
