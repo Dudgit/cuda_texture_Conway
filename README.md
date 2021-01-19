@@ -5,6 +5,7 @@ A table.cpp valamint a table.h egyszerű brute force refferenciákat tartalmaz
 Csak pár const érték
 ## step_funcs
 A refferenciák léptetéséhez pár függvény
-## Kernel.cu
-Itt hoztam létre és léptetem a gpu változatot, pontosabban a textúrákat.  
-Azért van ennyi include az elején, mert Visual Studioban csinálom, ami valamiért igényli ezeket is
+## cuda_utility.cuh
+Cuda függvények illetve textúrák futtása/létrehozása
+## kernel.cu
+A main projekt, ahol meghívom függvényeket és létrehozom a táblát.
