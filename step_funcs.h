@@ -18,15 +18,15 @@ auto initializer(std::vector<bool>& vec)
 
 auto initializer(float* res)
 {
-	std::vector<float> vec(h * w);
+	//std::vector<float> vec(h * w);
 	std::random_device rd{};
 	std::mt19937 mersenne_engine{ rd() };  // Generates random integers
 	std::uniform_real_distribution<float> dist{ 0, 100 };
-	auto gen = [&dist, &mersenne_engine]() { return dist(mersenne_engine) < 50 ? 0.f : 1.f; };
-	generate(vec.begin(), vec.end(), gen);
+	//auto gen = [&dist, &mersenne_engine]() { return dist(mersenne_engine) < 50 ? 0.f : 1.f; };
+	//generate(vec.begin(), vec.end(), gen);
 	for (int i = 0; i < h * w; ++i)
 	{
-		res[i] = vec[i];
+		res[i] = dist(mersenne_engine) < 50 ? 0.f : 1.f;
 	}
 }
 
@@ -48,15 +48,23 @@ auto step(table& first_table)
 	first_table = next;
 }
 
+void write_line(float* res,std::ofstream& handler,int x)
+{
+	for (int y = 0; y < w; ++y)
+	{
+		handler << res[x * h + y] << ',';
+	}
+}
+
 void write_out_result(float* res,std::ofstream& handler)
 {
+	handler << '[';
 	for (int x = 0; x < h; ++x)
 	{
-		for (int y = 0; y < w; ++y)
-		{
-			handler << res[x * h + y] << ' ';
-		}
-		handler << std::endl;
+		handler << "[";
+		write_line(res, handler,x);
+		handler << "]";
+		if (x < h - 1) { handler << ','<<std::endl;}
 	}
-	handler << std::endl;
+	handler << ']' << std::endl;;
 }

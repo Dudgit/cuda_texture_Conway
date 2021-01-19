@@ -49,7 +49,7 @@ cudaTextureObject_t get_texobject(float* hInput)
 	cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL);
 	return texObj;
 }
-void run_kernel(float* output, cudaTextureObject_t& texObj,float* hOutput)
+void run_kernel(float* output, cudaTextureObject_t& texObj,float* hOutput,int h,int w)
 {
 	texture_c <<< dimGrid, dimBlock >>> (output, texObj);
 
@@ -64,5 +64,5 @@ void step(float* h_array)
 	float* device_output;
 	cudaMalloc(&device_output, w * h * sizeof(float));
 
-	run_kernel(device_output, texObj, h_array);
+	run_kernel(device_output, texObj, h_array,h,w);
 }
