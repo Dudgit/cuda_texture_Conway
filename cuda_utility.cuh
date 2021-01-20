@@ -13,11 +13,20 @@ __global__ void texture_c(float* output, cudaTextureObject_t texobj)
 
 	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x; // vízszintes sorok
 	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y; // függõleges sorok
-	float sum = tex2D<float>(texobj, x - 1, y - 1) + tex2D<float>(texobj, x - 1, y) + tex2D<float>(texobj, x - 1, y + 1);
-	sum += tex2D<float>(texobj, x, y - 1) + tex2D<float>(texobj, x, y + 1);
-	sum += tex2D<float>(texobj, x + 1, y) + tex2D<float>(texobj, x + 1, y - 1) + tex2D<float>(texobj, x + 1, y + 1);
-	output[y * h + x] = sum < alive_n ? 0 : 1;
+	__syncthreads();
+	float s = tex2D<float>(texobj, x - 1, y - 1) + tex2D<float>(texobj, x, y - 1) + tex2D<float>(texobj, x + 1, y - 1)
+		+ tex2D<float>(texobj, x - 1, y) + tex2D<float>(texobj, x + 1, y)
+		+ tex2D<float>(texobj, x - 1, y + 1) + tex2D<float>(texobj, x, y + 1) + tex2D<float>(texobj, x + 1, y + 1);
+	
+	int sum = (int)s;
+	int isalive = (int) tex2D<float>(texobj, x, y );
 
+	float res = 0;	
+	if (sum == 3) res = 1;
+	if (isalive && sum == 2) res = 1;
+	
+	__syncthreads();
+	output[y * h + x] = res;
 }
 
 
