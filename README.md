@@ -9,3 +9,7 @@ A refferenciák léptetéséhez pár függvény
 Cuda függvények illetve textúrák futtása/létrehozása
 ## kernel.cu
 A main projekt, ahol meghívom függvényeket és létrehozom a táblát.
+## visualize.py
+Ebben a mappában csináltam animációkat különböző adatokról
+## videoadress
+feltöltöttem drive-ra pár megvalósítást, ebben a fileban van a link hozzá
