@@ -2,8 +2,8 @@
 #include <random>
 #include <algorithm>
 #include <fstream>
-
-
+#include <string>
+s
 #include "table.h"
 #include "game_varriables.h"
 
@@ -30,6 +30,7 @@ auto initializer(float* res)
 	}
 }
 
+
 auto compute(std::vector<bool>& nt_v, table & ft)
 {
 
@@ -52,19 +53,16 @@ void write_line(float* res,std::ofstream& handler,int x)
 {
 	for (int y = 0; y < w; ++y)
 	{
-		handler << res[x * h + y] << ',';
+		handler << res[x * h + y] << ' ';
 	}
 }
 
 void write_out_result(float* res,std::ofstream& handler)
 {
-	handler << '[';
 	for (int x = 0; x < h; ++x)
 	{
-		handler << "[";
 		write_line(res, handler,x);
-		handler << "]";
-		if (x < h - 1) { handler << ','<<std::endl;}
+		handler << std::endl;
 	}
-	handler << ']' << std::endl;;
+	handler  << std::endl;
 }

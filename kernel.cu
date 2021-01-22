@@ -28,11 +28,25 @@ int main()
 	float* host_array = h1.data();
 	std::ofstream  handler("data/cw1.csv");
 
+	auto texObj = get_texobject(host_array);
+	
+	float* device_output;
+	cudaMalloc(&device_output, w * h * sizeof(float));
+
+
+
 	write_out_result(host_array,handler);
 	for (int i = 0; i < number_of_steps; ++i)
 	{
-		step(host_array);
+		run_kernel(device_output, texObj, host_array, h, w);
 		write_out_result(host_array, handler);
 	}
-	
+
+
+
+	auto err = cudaDestroyTextureObject(texObj);
+	if (err != cudaSuccess) { std::cout << "Error destroying texture object: " << cudaGetErrorString(err) << "\n"; return -1; }
+
+	free(host_array);
+	free(device_output);
 }

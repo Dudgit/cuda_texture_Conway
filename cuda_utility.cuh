@@ -13,7 +13,7 @@ __global__ void texture_c(float* output, cudaTextureObject_t texobj)
 
 	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x; // vízszintes sorok
 	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y; // függõleges sorok
-	__syncthreads();
+
 	float s = tex2D<float>(texobj, x - 1, y - 1) + tex2D<float>(texobj, x, y - 1) + tex2D<float>(texobj, x + 1, y - 1)
 		+ tex2D<float>(texobj, x - 1, y) + tex2D<float>(texobj, x + 1, y)
 		+ tex2D<float>(texobj, x - 1, y + 1) + tex2D<float>(texobj, x, y + 1) + tex2D<float>(texobj, x + 1, y + 1);
@@ -25,7 +25,6 @@ __global__ void texture_c(float* output, cudaTextureObject_t texobj)
 	if (sum == 3) res = 1;
 	if (isalive && sum == 2) res = 1;
 	
-	__syncthreads();
 	output[y * h + x] = res;
 }
 
@@ -56,8 +55,17 @@ cudaTextureObject_t get_texobject(float* hInput)
 
 	cudaTextureObject_t texObj = 0;
 	cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL);
+
+
+	err = cudaFreeArray(cuArray);
+	if (err != cudaSuccess) { std::cout << "Error freeing array allocation: " << cudaGetErrorString(err) << "\n";-1 }
+
 	return texObj;
+
+	
+
 }
+
 void run_kernel(float* output, cudaTextureObject_t& texObj,float* hOutput,int h,int w)
 {
 	texture_c <<< dimGrid, dimBlock >>> (output, texObj);
@@ -67,11 +75,3 @@ void run_kernel(float* output, cudaTextureObject_t& texObj,float* hOutput,int h,
 
 }
 
-void step(float* h_array)
-{
-	auto texObj = get_texobject(h_array);
-	float* device_output;
-	cudaMalloc(&device_output, w * h * sizeof(float));
-
-	run_kernel(device_output, texObj, h_array,h,w);
-}
