@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <fstream>
 #include <string>
-s
 #include "table.h"
 #include "game_varriables.h"
 
@@ -18,12 +17,10 @@ auto initializer(std::vector<bool>& vec)
 
 auto initializer(float* res)
 {
-	//std::vector<float> vec(h * w);
 	std::random_device rd{};
 	std::mt19937 mersenne_engine{ rd() };  // Generates random integers
 	std::uniform_real_distribution<float> dist{ 0, 100 };
-	//auto gen = [&dist, &mersenne_engine]() { return dist(mersenne_engine) < 50 ? 0.f : 1.f; };
-	//generate(vec.begin(), vec.end(), gen);
+
 	for (int i = 0; i < h * w; ++i)
 	{
 		res[i] = dist(mersenne_engine) < 50 ? 0.f : 1.f;
