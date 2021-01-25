@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-handler = np.loadtxt('data/Conway.csv')
+handler = np.loadtxt('data/cw1.csv')
 
 def save_anim(h,num):
     mD = np.array([h[i*100 : (i+1)*100]for i in range(int(len(h)/100)-1)])
