@@ -6,17 +6,9 @@
 int main()
 {
 
-	int number_of_steps =1000;// (int)argv[1];
+	int number_of_steps =1000;
 	std::vector<float> h1(h * w);
-	/*	{
-		0,0,0,0,0,0,
-		0,0,1,0,0,0,
-		1,0,1,0,0,0,
-		0,1,1,0,0,0,
-		0,0,0,0,0,0,
-		0,0,0,0,0,0
 
-	};*/
 	
 
 	std::random_device rd{};
@@ -47,6 +39,10 @@ int main()
 	auto err = cudaDestroyTextureObject(texObj);
 	if (err != cudaSuccess) { std::cout << "Error destroying texture object: " << cudaGetErrorString(err) << "\n"; return -1; }
 
-	free(host_array);
-	free(device_output);
+	//free(host_array);
+
+	err = cudaFree(device_output);
+	if (err != cudaSuccess) { std::cout << "Error freeing array allocation: " << cudaGetErrorString(err) << "\n"; return -1; }
+
+
 }

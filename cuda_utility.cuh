@@ -58,7 +58,7 @@ cudaTextureObject_t get_texobject(float* hInput)
 
 
 	err = cudaFreeArray(cuArray);
-	if (err != cudaSuccess) { std::cout << "Error freeing array allocation: " << cudaGetErrorString(err) << "\n";-1 }
+	if (err != cudaSuccess) { std::cout << "Error freeing array allocation: " << cudaGetErrorString(err) << "\n"; -1; }
 
 	return texObj;
 
