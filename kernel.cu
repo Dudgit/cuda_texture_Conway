@@ -1,54 +1,84 @@
 #include "cuda_utility.cuh"
 
-
-
-
 int main()
 {
+	
 
-	int number_of_steps = 1000;// (int)argv[1];
-	std::vector<float> h1(h * w);
-	/*	{
-		0,0,0,0,0,0,
-		0,0,1,0,0,0,
-		1,0,1,0,0,0,
-		0,1,1,0,0,0,
-		0,0,0,0,0,0,
-		0,0,0,0,0,0
+	int number_of_steps = 1000;
+	//Initialize data holder vectors
 
-	};*/
+	std::vector<bool> reff_vec(h * w);
+	std::vector<int> gpu_vec(h * w);
+
+	//Fill values of the 2 vector
+	generate(reff_vec.begin(), reff_vec.end(), rg::gen);
+	std::copy(reff_vec.begin(), reff_vec.end(), gpu_vec.begin());
+
+	//Creating the table object
+	table t1(h, w, reff_vec);
+
+	//Creating arrays for host and device
+	int* host_array = gpu_vec.data();
+	int* device_output;
+	cudaMalloc(&device_output, w * h * sizeof(int));
+
+	// Creating the texture object
+	cudaArray* cuArray;
+
+	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindSigned);
+	error_check(cudaMallocArray(&cuArray, &channelDesc, w, h) ,"allocating memory");
+	error_check(cudaMemcpyToArray(cuArray, 0, 0, host_array, w * h * sizeof(int), cudaMemcpyHostToDevice), "copying memor to device");
+
+	cudaResourceDesc resDesc;
+	memset(&resDesc, 0, sizeof(resDesc));
+	resDesc.resType = cudaResourceTypeArray;
+	resDesc.res.array.array = cuArray;
 
 
-	std::random_device rd{};
-	std::mt19937 mersenne_engine{ rd() };  // Generates random integers
-	std::uniform_real_distribution<float> dist{ 0, 100 };
-	auto gen = [&dist, &mersenne_engine]() { return dist(mersenne_engine) < 50 ? 0.f : 1.f; };
-	generate(h1.begin(), h1.end(), gen);
+	cudaTextureDesc texDesc;
+	memset(&texDesc, 0, sizeof(texDesc));
+	texDesc.addressMode[0] = cudaAddressModeWrap;
+	texDesc.addressMode[1] = cudaAddressModeWrap;
+	texDesc.filterMode = cudaFilterModePoint;
+	texDesc.readMode = cudaReadModeElementType;
+	texDesc.normalizedCoords = 0;
 
-	float* host_array = h1.data();
+	cudaTextureObject_t texObj = 0;
+	cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL);
+	
+	//Output data
+	std::ofstream handler_naive("data/naive_conway.txt");
+	std::ofstream handler_gpu("data/texture_conway.txt");
 
-	float* device_output;
-	cudaMalloc(&device_output, w * h * sizeof(float));
+	//Write out, the initial table
+	write_out_result(host_array, handler_gpu);
+	t1.write_table_out(handler_naive);
 
-	std::ofstream  handler("data/cw1.csv");
-
-	//auto texObj = get_texobject(host_array);
-
-	write_out_result(host_array, handler);
+	//Executing the simulation
 	for (int i = 0; i < number_of_steps; ++i)
 	{
-		
-		auto texObj = get_texobject(host_array);
-		
-		step(host_array,device_output);
-		write_out_result(host_array, handler);
+		// One step
+		step(host_array,device_output,texObj,cuArray);
+		t1.do_game();
+
+		//Write out results
+		write_out_result(host_array, handler_gpu);
+		t1.write_table_out(handler_naive);
 	}
 
+
+	//Free the allocated memory
+	error_check(cudaFree(device_output), "freeing array");
+
+	//Destroy cuda object
+	error_check(cudaDestroyTextureObject(texObj), "destroying cuda texture");
 	
-	//free(host_array);
-
-	auto err = cudaFree(device_output);
-	if (err != cudaSuccess) { std::cout << "Error freeing array allocation: " << cudaGetErrorString(err) << "\n"; return -1; }
-
-
+	error_check(cudaFreeArray(cuArray), "freeing Cuda array");
+	handler_gpu.close();
+	handler_naive.close();
+	
+	//Saveing configurations
+	std::ofstream cfg("cfg.txt");
+	cfg << number_of_steps << ' ' << w << ' ' << h;
+	cfg.close();
 }
