@@ -20,8 +20,8 @@ __global__ void texture_c(int* output, cudaTextureObject_t texobj)
 	int isalive = tex2D<int>(texobj, x, y);
 
 	int res = 0;
-	if (sum == 3) res = 1;
-	if (isalive && sum == 2) res = 1;
+	if (sum == 3 || isalive && sum == 2) res = 1;
+	//if () res = 1;
 
 	output[y * h + x] = res;
 }

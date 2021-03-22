@@ -1,3 +1,3 @@
-const int h = 100;
-const int w = 100;
-const int block_size = 10;
+const int h = 6;
+const int w = 6;
+const int block_size = 3;

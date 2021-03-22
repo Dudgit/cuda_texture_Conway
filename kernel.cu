@@ -1,17 +1,28 @@
 #include "cuda_utility.cuh"
-
+#include <windows.h>
 int main()
 {
 	
 
-	int number_of_steps = 1000;
+	int number_of_steps = 30;
 	//Initialize data holder vectors
 
 	std::vector<bool> reff_vec(h * w);
 	std::vector<int> gpu_vec(h * w);
 
 	//Fill values of the 2 vector
-	generate(reff_vec.begin(), reff_vec.end(), rg::gen);
+	//generate(reff_vec.begin(), reff_vec.end(), rg::gen);
+	//testing with glidder
+	reff_vec =
+	{ 
+		0,0,0,0,0,0,
+		0,0,0,0,1,0,
+		0,0,1,0,1,0,
+		0,0,0,1,1,0,
+		0,0,0,0,0,0,
+		0,0,0,0,0,0
+
+	}; 
 	std::copy(reff_vec.begin(), reff_vec.end(), gpu_vec.begin());
 
 	//Creating the table object
