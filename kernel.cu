@@ -1,5 +1,4 @@
 #include "cuda_utility.cuh"
-#include <windows.h>
 int main()
 {
 	
@@ -14,11 +13,11 @@ int main()
 	//generate(reff_vec.begin(), reff_vec.end(), rg::gen);
 	//testing with glidder
 	reff_vec =
-	{ 
+	{ 			  
 		0,0,0,0,0,0,
-		0,0,0,0,1,0,
-		0,0,1,0,1,0,
-		0,0,0,1,1,0,
+		0,0,0,1,0,0,
+		0,1,0,1,0,0,
+		0,0,1,1,0,0,
 		0,0,0,0,0,0,
 		0,0,0,0,0,0
 
@@ -52,7 +51,7 @@ int main()
 	texDesc.addressMode[1] = cudaAddressModeWrap;
 	texDesc.filterMode = cudaFilterModePoint;
 	texDesc.readMode = cudaReadModeElementType;
-	texDesc.normalizedCoords = 0;
+	texDesc.normalizedCoords = 1;
 
 	cudaTextureObject_t texObj = 0;
 	cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL);
@@ -64,7 +63,32 @@ int main()
 	//Write out, the initial table
 	write_out_result(host_array, handler_gpu);
 	t1.write_table_out(handler_naive);
+	/*
+	for (int i = 0; i < h; ++i)
+	{
+		for (int j = 0; j < w; ++j)
+		{
+			std::cout << host_array[h * i + j] << ' ';
+		}
+		std::cout << std::endl;
+	}
 
+	std::cout << std::endl;
+
+	red << < dimGrid, dimBlock >> > (device_output, texObj);
+
+	auto err = cudaMemcpy(host_array, device_output, w * h * sizeof(int), cudaMemcpyDeviceToHost);
+	
+	for (int i = 0; i < h; ++i)
+	{
+		for (int j = 0; j < w; ++j)
+		{
+			std::cout << host_array[h * i + j] << ' ';
+		}
+		std::cout<<std::endl;
+	}
+	*/
+	
 	//Executing the simulation
 	for (int i = 0; i < number_of_steps; ++i)
 	{
@@ -76,7 +100,7 @@ int main()
 		write_out_result(host_array, handler_gpu);
 		t1.write_table_out(handler_naive);
 	}
-
+	
 
 	//Free the allocated memory
 	error_check(cudaFree(device_output), "freeing array");

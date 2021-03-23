@@ -8,14 +8,19 @@
 dim3 dimBlock(w / block_size, h / block_size);
 dim3 dimGrid(block_size, block_size);
 
+
 __global__ void texture_c(int* output, cudaTextureObject_t texobj)
 {
-	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
-	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+	unsigned int u = blockIdx.x * blockDim.x + threadIdx.x;
+	unsigned int v = blockIdx.y * blockDim.y + threadIdx.y;
 	
-	int sum = tex2D<int>(texobj, x - 1, y - 1) + tex2D<int>(texobj, x, y - 1) + tex2D<int>(texobj, x + 1, y - 1)
-		+ tex2D<int>(texobj, x - 1, y) + tex2D<int>(texobj, x + 1, y)
-		+ tex2D<int>(texobj, x - 1, y + 1) + tex2D<int>(texobj, x, y + 1) + tex2D<int>(texobj, x + 1, y + 1);
+	float x = u / (float)w + .1f;
+	float y = v / (float)h + .1f;
+
+
+	int sum = tex2D<int>(texobj, x - .15f, y - .15f) + tex2D<int>(texobj, x, y - .15f) + tex2D<int>(texobj, x + .15f, y - .15f)
+		+ tex2D<int>(texobj, x - .15f, y) + tex2D<int>(texobj, x + .15f, y)
+		+ tex2D<int>(texobj, x - .15f, y + .15f) + tex2D<int>(texobj, x, y + .15f) + tex2D<int>(texobj, x + .15f, y + .15f);
 
 	int isalive = tex2D<int>(texobj, x, y);
 
@@ -23,10 +28,26 @@ __global__ void texture_c(int* output, cudaTextureObject_t texobj)
 	if (sum == 3 || isalive && sum == 2) res = 1;
 	//if () res = 1;
 
-	output[y * h + x] = res;
+	output[u * h + v] = res;
 }
 
+__global__ void red(int* output, cudaTextureObject_t texobj)
+{
+	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+	
+	
+	float u = x /(float) w + .1f;
+	float v = y /(float) h + .1f;
 
+
+	int sum = tex2D<int>(texobj,u-.15f,v);
+		//+ tex2D<int>(texobj, x, y - 1) + tex2D<int>(texobj, x + 1, y - 1);
+		//+ tex2D<int>(texobj, x - 1, y) + tex2D<int>(texobj, x + 1, y)
+		//+ tex2D<int>(texobj, x - 1, y + 1) + tex2D<int>(texobj, x, y + 1) + tex2D<int>(texobj, x + 1, y + 1);
+
+	output[y * h + x] = sum;
+}
 
 
 void run_kernel(int* output, cudaTextureObject_t& texObj, int* hOutput, int h, int w)
