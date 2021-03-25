@@ -49,7 +49,7 @@ void step(int* h_array,int* device_output,cudaTextureObject_t texObj,cudaArray* 
 	run_kernel(device_output, texObj, h_array, h, w);
 
 	// The texture memory is binded with the cuda array
-	auto err = cudaMemcpyToArray(cuArray, 0, 0, h_array, w * h * sizeof(int), cudaMemcpyHostToDevice);
+	auto err = cudaMemcpy2DToArray(cuArray, 0, 0, h_array, w * h * sizeof(int), w, h, cudaMemcpyHostToDevice);
 	if (err != cudaSuccess) { std::cout << "Error copying memory to device: " << cudaGetErrorString(err) << "\n"; }
 
 }
