@@ -15,10 +15,10 @@ __global__ void texture_c(int* output, cudaTextureObject_t texobj)
 	unsigned int ty = blockIdx.y * blockDim.y + threadIdx.y;
 	
 	
-	float corr = 0.01f;//1/(float)(h*w);
+	float corr = 0.01f;
 	float push = 2 * corr;
 
-	float x = tx / (float)w + corr; // sÌr···s
+	float x = tx / (float)w + corr; 
 	float y = ty / (float)h + corr;
 
 
@@ -31,25 +31,6 @@ __global__ void texture_c(int* output, cudaTextureObject_t texobj)
 	if (sum == 3 || isalive && sum == 2) res = 1;
 
 	output[ty * h + tx] = res;
-}
-
-__global__ void red(int* output, cudaTextureObject_t texobj)
-{
-	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
-	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
-	
-	float corr = 0.01f;//1/(float)(h*w);
-
-	float u = x / (float)w + corr ;
-	float v = y / (float)h + corr ;
-
-	float push = 2 * corr;
-	//int sum = tex2D<int>(texobj,u-push,v-0.01f);
-	int sum = tex2D<int>(texobj, u , v  )+ tex2D<int>(texobj, x, y - 2*push) + tex2D<int>(texobj, x + 1, y - 2*push);
-		//+ tex2D<int>(texobj, x - 1, y) + tex2D<int>(texobj, x + 1, y)
-		//+ tex2D<int>(texobj, x - 1, y + 1) + tex2D<int>(texobj, x, y + 1) + tex2D<int>(texobj, x + 1, y + 1);
-
-	output[y * h + x] = sum;
 }
 
 
